@@ -50,6 +50,7 @@ void TestAddDocument() {
     server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
     const auto found_docs_1 = server.FindTopDocuments("cat city"s);
     ASSERT_EQUAL(found_docs_1.size(), 1u);
+
     server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
     const auto found_docs_2 = server.FindTopDocuments("cat city"s);
     ASSERT_EQUAL(found_docs_2.size(), 2u);
@@ -90,15 +91,17 @@ void TestMatchDocumentSearchQuery() {
     SearchServer server;
     server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
     server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
+
     const auto found_matched_documents_1 = server.MatchDocument(query, doc_id_1);
     tuple<vector<string>, DocumentStatus> expected_result_1 = { { "cat"s, "city"s } , DocumentStatus::ACTUAL };
     ASSERT(found_matched_documents_1 == expected_result_1);
+
     const auto found_matched_documents_2 = server.MatchDocument(query, doc_id_2);
     tuple<vector<string>, DocumentStatus> expected_result_2 = { {} , DocumentStatus::ACTUAL };
     ASSERT_HINT(found_matched_documents_2 == expected_result_2, "Document containing minus words must be excluded from result. Word list must be empty"s);
 }
 // Сортировка найденных документов по релевантности. Возвращаемые при поиске документов результаты должны быть отсортированы в порядке убывания релевантности.
-void TestSortFoundDocumentsRelevance()
+void TestSortFoundDocumentsByRelevance()
 {
     const int doc_id_1 = 4;
     const int doc_id_2 = 8;
@@ -110,6 +113,7 @@ void TestSortFoundDocumentsRelevance()
     SearchServer server;
     server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
     server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
+
     const auto found_docs = server.FindTopDocuments("plus some words"s);
     ASSERT(found_docs[0].id == doc_id_1);
     ASSERT_HINT(found_docs[1].id == doc_id_2, "Documents must be sorted in descending order of relevance"s);
@@ -123,13 +127,13 @@ void TestCalculateRatingAddedDocument()
 
     SearchServer server;
     server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-    const auto expected_result = accumulate(ratings.begin(), ratings.end(), 0) / static_cast<int>(ratings.size());
+
+    const auto expected_result_rating = (8 + (-3)) / 2;
     const auto found_docs = server.FindTopDocuments("cat in the city"s);
-    ASSERT(expected_result == 2);
-    ASSERT_EQUAL_HINT(found_docs[0].rating, expected_result, "Rating of the added document must be equal to the arithmetic mean"s);
+    ASSERT_EQUAL_HINT(found_docs[0].rating, expected_result_rating, "Rating of the added document must be equal to the arithmetic mean"s);
 }
 // Фильтрация результатов поиска с использованием предиката, задаваемого пользователем.
-void TestFilterSearchResultPredicate()
+void TestFilterSearchResultByPredicate()
 {
     const int doc_id_1 = 1;
     const int doc_id_2 = 4;
@@ -152,7 +156,7 @@ void TestFilterSearchResultPredicate()
     ASSERT_EQUAL_HINT(found_docs[1].id % 2, 0, "Condition in predicate is not met"s);
 }
 // Поиск документов, имеющих заданный статус.
-void TestSearchDocumentWithStatus() {
+void TestSearchDocumentByStatus() {
     const int doc_id_1 = 1;
     const int doc_id_2 = 4;
     const int doc_id_3 = 0;
@@ -167,12 +171,15 @@ void TestSearchDocumentWithStatus() {
     server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
     server.AddDocument(doc_id_2, content_2, DocumentStatus::BANNED, ratings_2);
     server.AddDocument(doc_id_3, content_3, DocumentStatus::REMOVED, ratings_3);
+
     const auto found_docs_1 = server.FindTopDocuments("cat"s, DocumentStatus::ACTUAL);
     ASSERT_EQUAL(found_docs_1.size(), 1u);
     ASSERT_EQUAL(found_docs_1[0].id, doc_id_1);
+
     const auto found_docs_2 = server.FindTopDocuments("cat"s, DocumentStatus::BANNED);
     ASSERT_EQUAL(found_docs_2.size(), 1u);
     ASSERT_EQUAL(found_docs_2[0].id, doc_id_2);
+
     const auto found_docs_3 = server.FindTopDocuments("some words"s, DocumentStatus::REMOVED);
     ASSERT_EQUAL(found_docs_3.size(), 1u);
     ASSERT_EQUAL(found_docs_3[0].id, doc_id_3);
@@ -193,14 +200,18 @@ void TestCalculateRelevanceDocument() {
     server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
     server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
     server.AddDocument(doc_id_3, content_3, DocumentStatus::ACTUAL, ratings_3);
+
     const auto found_docs = server.FindTopDocuments("fluffy groomed cat"s);
 
     const double test_idf_fluffy = log(static_cast<double>(found_docs.size()) / 1);
     const double test_tf_fluffy_doc_id_1 = 0;
+
     const double test_idf_groomed = log(static_cast<double>(found_docs.size()) / 1);
     const double test_tf_groomed_doc_id_1 = 0;
+
     const double test_idf_cat = log(static_cast<double>(found_docs.size()) / 2);
     const double test_tf_cat_doc_id_1 = 0.25;
+
     const double expected_result = test_tf_fluffy_doc_id_1 * test_idf_fluffy + test_tf_groomed_doc_id_1 * test_idf_groomed + test_tf_cat_doc_id_1 * test_idf_cat;
     ASSERT_EQUAL_HINT(found_docs[2].relevance, expected_result, "Document relevance is calculated incorrectly"s);
 }
@@ -210,10 +221,10 @@ void TestSearchServer() {
     RUN_TEST(TestAddDocument);
     RUN_TEST(TestExcludeMinusWordsFromDocument);
     RUN_TEST(TestMatchDocumentSearchQuery);
-    RUN_TEST(TestSortFoundDocumentsRelevance);
+    RUN_TEST(TestSortFoundDocumentsByRelevance);
     RUN_TEST(TestCalculateRatingAddedDocument);
-    RUN_TEST(TestFilterSearchResultPredicate);
-    RUN_TEST(TestSearchDocumentWithStatus);
+    RUN_TEST(TestFilterSearchResultByPredicate);
+    RUN_TEST(TestSearchDocumentByStatus);
     RUN_TEST(TestCalculateRelevanceDocument);
 }
 
@@ -495,4 +506,4 @@ int main() {
         PrintDocument(document);
     }
 }
->>>>>>> 9b87ba4a3274a16a37aa8488c67ccb2b87a39719
+
