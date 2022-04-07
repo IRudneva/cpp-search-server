@@ -86,13 +86,7 @@ public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words)
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
-        for (const auto& word : stop_words_)
-        {
-            if (!IsValidWord(word))
-            {
-                throw invalid_argument("Stop words contains invalid characters"s);
-            }
-        }
+        IsValidWordInContainer(stop_words_);
     }
 
     explicit SearchServer(const string& stop_words_text)
@@ -100,16 +94,14 @@ public:
     }
 
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        if ((document_id < 0) || (documents_.count(document_id) > 0)) {
-            throw invalid_argument("Document with specified ID already exists or ID is invalid"s);
+        if (document_id < 0) {
+            throw invalid_argument("ID is invalid"s);
+        }
+        if (documents_.count(document_id) > 0) {
+            throw invalid_argument("Document with specified ID already exists"s);
         }
         const vector<string> words = SplitIntoWordsNoStop(document);
-        for (const auto& word : words)
-        {
-            if (!IsValidWord(word)) {
-                throw invalid_argument("Stop words contains invalid characters"s);
-            }
-        }
+        IsValidWordInContainer(words);
         const double inv_word_count = 1.0 / words.size();
         for (const string& word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
@@ -204,6 +196,16 @@ private:
             });
     }
 
+    template <typename Container>
+    static bool IsValidWordInContainer(const Container& words) {
+        for (const auto& word : words) {
+            if (!IsValidWord(word)) {
+                throw invalid_argument("Stop words contains invalid characters: "s + word);
+            }
+        }
+        return true;
+    }
+
     vector<string> SplitIntoWordsNoStop(const string& text) const {
         vector<string> words;
         for (const string& word : SplitIntoWords(text)) {
@@ -233,8 +235,14 @@ private:
             is_minus = true;
             text = text.substr(1);
         }
-        if (text.empty() || text[0] == '-' || !IsValidWord(text)) {
-            throw invalid_argument("Search query words contains invalid characters or search query is invalid or no text after character '-'"s);
+        if (text.empty()) {
+            throw invalid_argument("No text after character '-'"s);
+        }
+        if (text[0] == '-') {
+            throw invalid_argument("Search query is invalid"s);
+        }
+        if (!IsValidWord(text)) {
+            throw invalid_argument("Search query words contains invalid characters: "s + text);
         }
         return { text, is_minus, IsStopWord(text) };
     }
@@ -367,10 +375,11 @@ int main() {
     FindTopDocuments(search_server, "пушистый -пёс"s);
     FindTopDocuments(search_server, "пушистый --кот"s);
     FindTopDocuments(search_server, "пушистый -"s);
+    FindTopDocuments(search_server, "пушистый -ко\x12т"s);
 
     MatchDocuments(search_server, "пушистый пёс"s);
     MatchDocuments(search_server, "модный -кот"s);
     MatchDocuments(search_server, "модный --пёс"s);
     MatchDocuments(search_server, "пушистый - хвост"s);
+    MatchDocuments(search_server, "пушистый -хв\x12ост"s);
 }
-
