@@ -1,18 +1,5 @@
 #include "string_processing.h"
 
-string ReadLine() {
-    string s;
-    getline(cin, s);
-    return s;
-}
-
-int ReadLineWithNumber() {
-    int result;
-    cin >> result;
-    ReadLine();
-    return result;
-}
-
 vector<string> SplitIntoWords(const string& text) {
     vector<string> words;
     string word;

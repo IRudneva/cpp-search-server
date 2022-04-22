@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 template <typename Iterator>
 class IteratorRange {
 public:
@@ -21,6 +23,7 @@ private:
     Iterator first_, last_;
     size_t size_;
 };
+
 template <typename Iterator>
 std::ostream& operator<<(std::ostream& out, const IteratorRange<Iterator>& range) {
     for (Iterator it = range.begin(); it != range.end(); ++it) {
@@ -33,6 +36,8 @@ template <typename Iterator>
 class Paginator {
 public:
     Paginator(Iterator begin, Iterator end, size_t page_size) {
+        assert(end >= begin && page_size > 0);
+
         for (size_t left = distance(begin, end); left > 0;) {
             const size_t current_page_size = min(page_size, left);
             const Iterator current_page_end = next(begin, current_page_size);

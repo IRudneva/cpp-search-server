@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+
 using namespace std;
 
 struct Document {
@@ -20,3 +22,7 @@ enum class DocumentStatus {
     BANNED,
     REMOVED,
 };
+
+void PrintDocument(const Document& document);
+
+void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status);
