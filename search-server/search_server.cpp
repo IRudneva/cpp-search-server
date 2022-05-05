@@ -36,10 +36,54 @@ vector<Document> SearchServer::FindTopDocuments(const string& raw_query) const {
 int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
-int SearchServer::GetDocumentId(int index) const {
-    return document_ids_.at(index);
+
+vector<int>::const_iterator SearchServer::begin() const {
+    return document_ids_.begin();
 }
 
+vector<int>::const_iterator SearchServer::end() const {
+    return document_ids_.end();
+}
+
+const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    static map<string, double> words_freqs;
+    if (!words_freqs.empty())  
+    {
+        words_freqs.clear();
+    }
+
+    if (!documents_.count(document_id))
+    {
+        return words_freqs;
+    }
+
+    for (auto& [word, id_freq] : word_to_document_freqs_)
+    {
+        if (id_freq.count(document_id))
+        {
+            words_freqs[word] = id_freq.at(document_id);
+        }
+    }
+
+    return words_freqs;
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+
+    for (auto& document : word_to_document_freqs_)
+    {
+        if (document.second.count(document_id))
+        {
+            document.second.erase(document_id);
+        }
+    }
+    documents_.erase(document_id);
+    auto remove_id = find(document_ids_.begin(), document_ids_.end(), document_id);
+    if (remove_id != document_ids_.end())
+    {
+        document_ids_.erase(remove_id);
+    }
+}
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const {
     const auto query = ParseQuery(raw_query);

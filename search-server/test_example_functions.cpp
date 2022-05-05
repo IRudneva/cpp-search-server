@@ -10,6 +10,7 @@ void AddDocument(SearchServer& search_server, int document_id, const string& doc
 }
 
 void FindTopDocuments(const SearchServer& search_server, const string& raw_query) {
+    LOG_DURATION_STREAM("Operation time", cout);
     cout << "Results for request: "s << raw_query << endl;
     try {
         for (const Document& document : search_server.FindTopDocuments(raw_query)) {
@@ -22,11 +23,11 @@ void FindTopDocuments(const SearchServer& search_server, const string& raw_query
 }
 
 void MatchDocuments(const SearchServer& search_server, const string& query) {
+    LOG_DURATION_STREAM("Operation time", cout);
     try {
         cout << "Matching for request: "s << query << endl;
-        const int document_count = search_server.GetDocumentCount();
-        for (int index = 0; index < document_count; ++index) {
-            const int document_id = search_server.GetDocumentId(index);
+        for (auto index = search_server.begin(); index != search_server.end(); ++index) {
+            const int document_id = *index;
             const auto [words, status] = search_server.MatchDocument(query, document_id);
             PrintMatchDocumentResult(document_id, words, status);
         }

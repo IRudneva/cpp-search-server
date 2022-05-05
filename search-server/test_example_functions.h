@@ -1,5 +1,6 @@
 #pragma once
 #include "request_queue.h"
+#include "log_duration.h"
 
 void AddDocument(SearchServer& search_server, int document_id, const string& document, DocumentStatus status, const vector<int>& ratings);
 
