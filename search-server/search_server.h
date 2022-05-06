@@ -10,8 +10,6 @@
 #include <stdexcept>
 #include <cmath>
 
-using namespace std;
-
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 constexpr double STANDARD = 1e-6; 
 
@@ -35,9 +33,9 @@ public:
 
     int GetDocumentCount() const;
  
-    vector<int>::const_iterator begin() const;
+    set<int>::const_iterator begin() const;
 
-    vector<int>::const_iterator end() const;
+    set<int>::const_iterator end() const;
 
     const map<string, double>& GetWordFrequencies(int document_id) const;
 
@@ -52,8 +50,9 @@ private:
     };
     const set<string> stop_words_;
     map<string, map<int, double>> word_to_document_freqs_;
+    map<int, map<string, double>> document_word_freqs_;
     map<int, DocumentData> documents_;
-    vector<int> document_ids_;
+    set<int> document_ids_;
 
     bool IsStopWord(const string& word) const;
 
