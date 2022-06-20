@@ -1,12 +1,14 @@
 #include "document.h"
 
+using namespace std::string_literals;
+
 Document::Document(int id, double relevance, int rating)
     : id(id)
     , relevance(relevance)
     , rating(rating) {
 }
 
-ostream& operator<<(ostream& out, const Document& document) {
+std::ostream& operator<<(std::ostream& out, const Document& document) {
     out << "{ "s
         << "document_id = "s << document.id << ", "s
         << "relevance = "s << document.relevance << ", "s
@@ -15,19 +17,19 @@ ostream& operator<<(ostream& out, const Document& document) {
 }
 
 void PrintDocument(const Document& document) {
-    cout << "{ "s
+    std::cout << "{ "s
         << "document_id = "s << document.id << ", "s
         << "relevance = "s << document.relevance << ", "s
-        << "rating = "s << document.rating << " }"s << endl;
+        << "rating = "s << document.rating << " }"s << std::endl;
 }
 
-void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status) {
-    cout << "{ "s
+void PrintMatchDocumentResult(int document_id, const std::vector<std::string_view>& words, DocumentStatus status) {
+    std::cout << "{ "s
         << "document_id = "s << document_id << ", "s
         << "status = "s << static_cast<int>(status) << ", "s
         << "words ="s;
-    for (const string& word : words) {
-        cout << ' ' << word;
+    for (const std::string_view word : words) {
+       std:: cout << ' ' << word;
     }
-    cout << "}"s << endl;
+    std::cout << "}"s << std::endl;
 }

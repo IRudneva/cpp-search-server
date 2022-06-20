@@ -1,10 +1,7 @@
 #pragma once
-
 #include <iostream>
 #include <string>
 #include <vector>
-
-using namespace std;
 
 struct Document {
     Document() = default;
@@ -14,7 +11,7 @@ struct Document {
     int rating = 0;
 };
 
-ostream& operator<<(ostream& out, const Document& document);
+std::ostream& operator<<(std::ostream& out, const Document& document);
 
 enum class DocumentStatus {
     ACTUAL,
@@ -25,4 +22,5 @@ enum class DocumentStatus {
 
 void PrintDocument(const Document& document);
 
-void PrintMatchDocumentResult(int document_id, const vector<string>& words, DocumentStatus status);
+
+void PrintMatchDocumentResult(int document_id, const std::vector<std::string_view>& words, DocumentStatus status);
